@@ -1,0 +1,139 @@
+<script>
+  const API_BASE = "https://haytharlibrary3.great-site.net/api";
+
+  // ၁။ Site Settings (Name & Colors) ကို Fetch လုပ်ခြင်း
+  fetch(`${API_BASE}/settings`) // Backend မှာ api/settings/index.php ဆောက်ထားရန်လိုသည်
+    .then(res => res.json())
+    .then(data => {
+      if(data.site_name) document.querySelector('.brand').textContent = data.site_name;
+      
+      // Admin မှာ သတ်မှတ်ထားတဲ့ အရောင်များကို CSS Variables ထဲ ထည့်ခြင်း
+      if(data.theme) {
+        const root = document.documentElement;
+        root.style.setProperty('--color-primary', data.theme.primary);
+        root.style.setProperty('--color-accent', data.theme.accent);
+        root.style.setProperty('--color-bg', data.theme.bg);
+        root.style.setProperty('--color-text', data.theme.text);
+      }
+    });
+
+  // ၂။ Posts ကို Fetch လုပ်ခြင်း
+  fetch(`${API_BASE}/posts`)
+    .then(res => res.json())
+    .then(posts => {
+      const container = document.getElementById('posts');
+      if (posts.length === 0) {
+        container.innerHTML = "<p>No posts available.</p>";
+        return;
+      }
+      posts.forEach(p => {
+        const card = document.createElement('article');
+        card.className = 'card';
+        card.innerHTML = `
+          <div style="border: 1px solid #eee; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+            <h3 style="margin-top: 0;"><a href="/post.html?slug=${p.slug}" style="color: var(--color-primary); text-decoration: none;">${p.title}</a></h3>
+            <p>${p.excerpt}...</p>
+            <a href="/post.html?slug=${p.slug}" style="color: var(--color-accent);">Read More →</a>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    })
+    .catch(err => {
+      console.error("Error loading posts:", err);
+      document.getElementById('posts').innerHTML = "<p>Unable to load posts at this time.</p>";
+    });
+</script>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>CMS Frontend</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="public/assets/styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <a class="brand" href="/">Loading...</a>
+      <nav class="nav">
+        <a href="/">Home</a>
+        <a href="#posts">Blog</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="site-main">
+    <section class="hero">
+      <div class="container">
+        <h1 id="site-title">Welcome to Our Library</h1>
+        <p>Your dynamic content powered by PHP & Netlify.</p>
+        <a class="btn" href="#posts">Explore Posts</a>
+      </div>
+    </section>
+
+    <section id="posts" class="section">
+      <div class="container">
+        <h2>Latest Insights</h2>
+        <div id="posts-container" class="grid">
+          <p>Loading posts...</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>&copy; <span id="year"></span> <span id="footer-name">CMS</span>. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="public/assets/scripts.js"></script>
+  <script>
+    // 💡 InfinityFree Backend URL ကို ဒီမှာ ပြောင်းထည့်ပါ
+    const API_BASE = "https://haytharlibrary3.great-site.net/api";
+
+    // ၁။ Settings (Site Name & Colors) ကို Fetch လုပ်ခြင်း
+    fetch(`${API_BASE}/settings/index.php`)
+      .then(res => res.json())
+      .then(data => {
+        document.title = data.site_name || "My Library";
+        document.querySelector('.brand').textContent = data.site_name;
+        document.getElementById('footer-name').textContent = data.site_name;
+
+        if(data.theme) {
+          const root = document.documentElement;
+          root.style.setProperty('--color-primary', data.theme.primary);
+          root.style.setProperty('--color-accent', data.theme.accent);
+          root.style.setProperty('--color-bg', data.theme.bg);
+          root.style.setProperty('--color-text', data.theme.text);
+        }
+      });
+
+    // ၂။ Posts ကို Fetch လုပ်ခြင်း
+    fetch(`${API_BASE}/posts/index.php`)
+      .then(res => res.json())
+      .then(posts => {
+        const container = document.getElementById('posts-container');
+        container.innerHTML = ""; // Clear loader
+        if(posts.length === 0) {
+          container.innerHTML = "<p>No posts available yet.</p>";
+          return;
+        }
+        posts.forEach(p => {
+          const card = document.createElement('article');
+          card.className = 'card';
+          card.innerHTML = `
+            <h3>${p.title}</h3>
+            <p>${p.excerpt}...</p>
+            <a href="post.html?slug=${p.slug}" style="color: var(--color-accent); font-weight:bold;">Read More →</a>
+          `;
+          container.appendChild(card);
+        });
+      })
+      .catch(err => {
+        document.getElementById('posts-container').innerHTML = "<p>Error loading content.</p>";
+      });
+  </script>
+</body>
+</html>
